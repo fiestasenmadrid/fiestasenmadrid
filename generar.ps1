@@ -27,8 +27,9 @@ $RrppUrl = $env:RRPP_URL
 $rrppFile = Join-Path $PSScriptRoot 'rrpp.txt'
 if (-not $RrppUrl -and (Test-Path $rrppFile)) { $RrppUrl = (Get-Content $rrppFile -Raw).Trim() }
 if (-not $RrppUrl) { throw 'Falta tu link de RRPP: crea rrpp.txt o define la variable RRPP_URL.' }
-$SiteUrl = $SiteUrl.TrimEnd('/')
-$RrppUrl = $RrppUrl.TrimEnd('/')
+$SiteUrl = $SiteUrl.Trim([char]0xFEFF, ' ', "`r", "`n").TrimEnd('/')
+$RrppUrl = $RrppUrl.Trim([char]0xFEFF, ' ', "`r", "`n").TrimEnd('/')
+if ($RrppUrl -notmatch '^https://') { throw "El link de RRPP no es valido: $RrppUrl" }
 $Base = ([Uri]$SiteUrl).AbsolutePath.TrimEnd('/')
 
 # ------------------------------------------------------------------ Fechas
@@ -60,7 +61,7 @@ function Etiqueta-Dia([datetime]$d) {
 }
 
 # ------------------------------------------------------------------ Utilidades
-function Esc($s) { [Net.WebUtility]::HtmlEncode([string]$s) }
+function Esc($s) { ([string]$s).Replace('&', '&amp;').Replace('<', '&lt;').Replace('>', '&gt;').Replace('"', '&quot;').Replace("'", '&#39;') }
 
 function Slug([string]$s) {
   $n = $s.ToLowerInvariant().Normalize([Text.NormalizationForm]::FormD)
