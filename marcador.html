@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Copiar fiestas de Fourvenues</title>
+<style>
+  body { margin: 0; background: #0a0a10; color: #f4f3f8; font: 16px/1.6 system-ui, sans-serif; }
+  main { max-width: 640px; margin: 0 auto; padding: 40px 16px; }
+  h1 { font-size: 28px; line-height: 1.15; margin: 0 0 12px; }
+  ol { padding-left: 20px; } li { margin: 0 0 10px; }
+  code { background: #1c1c28; padding: 2px 6px; border-radius: 6px; }
+  .marcador { display: inline-block; margin: 16px 0 24px; background: #ff2e7e; color: #fff; font-weight: 700; text-decoration: none; padding: 14px 22px; border-radius: 14px; cursor: grab; }
+  .nota { color: #a3a2b6; font-size: 14px; }
+</style>
+</head>
+<body>
+<main>
+<h1>Botón «Copiar fiestas»</h1>
+<p>Este botón lee las fiestas de tu página de Fourvenues y las copia listas para pegar en tu hoja de Google.</p>
+<a class="marcador" id="marcador" href="#">📋 Copiar fiestas</a>
+<h2>Instalarlo (una sola vez)</h2>
+<ol>
+  <li>Muestra la barra de marcadores de Chrome: <code>Ctrl + Mayús + B</code>.</li>
+  <li><strong>Arrastra el botón rosa</strong> de arriba hasta la barra de marcadores.</li>
+</ol>
+<h2>Usarlo cada día</h2>
+<ol>
+  <li>Abre tu página de Fourvenues y pulsa <strong>«Ver todos los eventos»</strong>.</li>
+  <li>Baja hasta el final de la lista para que carguen todas las fiestas.</li>
+  <li>Pulsa el marcador <strong>📋 Copiar fiestas</strong>. Te dirá cuántas ha copiado.</li>
+  <li>En tu hoja de Google, haz clic en la celda <strong>A1</strong> y pega con <code>Ctrl + V</code>.</li>
+</ol>
+<p class="nota">La web se regenera sola cada mañana con lo que haya en la hoja. Si quieres que salga al momento, entra en GitHub › Actions › «Actualizar web de fiestas» › Run workflow.</p>
+</main>
+
+<script type="text/plain" id="codigo">
+(function () {
+  if (!/fourvenues\.com/.test(location.host)) { alert('Abre primero tu página de Fourvenues.'); return; }
+  var enlaces = document.querySelectorAll('a[href*="/events/"]');
+  if (!enlaces.length) { alert('No veo fiestas. Pulsa «Ver todos los eventos» y vuelve a intentarlo.'); return; }
+  var M = { enero: 1, febrero: 2, marzo: 3, abril: 4, mayo: 5, junio: 6, julio: 7, agosto: 8, septiembre: 9, octubre: 10, noviembre: 11, diciembre: 12 };
+  var P = 'https://fourvenues.com/cdn-cgi/imagedelivery/kWuoTchaMsk7Xnc_FNem7A/';
+  var hoy = new Date();
+  var limpia = function (s) { return (s || '').replace(/[\t\r\n]+/g, ' ').trim(); };
+  var filas = [['fecha', 'inicio', 'fin', 'titulo', 'discoteca', 'codigo', 'imagen', 'estado'].join('\t')];
+  enlaces.forEach(function (a) {
+    var L = a.innerText.split('\n').map(function (s) { return s.trim(); }).filter(Boolean);
+    var estado = '';
+    if (/cancelado/i.test(L[0])) { estado = 'cancelado'; L.shift(); }
+    var m = (L[0] || '').match(/(\d+) de (\p{L}+)/u);
+    if (!m || !M[m[2].toLowerCase()]) return;
+    var mes = M[m[2].toLowerCase()];
+    var anio = hoy.getFullYear();
+    if (mes < hoy.getMonth() + 1 - 6) anio++;
+    var fecha = anio + '-' + ('0' + mes).slice(-2) + '-' + ('0' + m[1]).slice(-2);
+    var fin = /^\d/.test(L[2] || '') ? L[2] : '';
+    var resto = L.slice(3);
+    var disco = resto[resto.length - 1] || '';
+    var titulo = resto.length > 1 ? resto[0] : disco;
+    var img = (a.querySelector('img') || {}).src || '';
+    if (img.indexOf(P) === 0) img = img.slice(P.length).split('/')[0];
+    var codigo = a.href.split('/events/')[1].split(/[?#/]/)[0];
+    filas.push([fecha, L[1], fin, titulo, disco, codigo, img, estado].map(limpia).join('\t'));
+  });
+  var texto = filas.join('\n');
+  var n = filas.length - 1;
+  var ok = function () { alert(n + ' fiestas copiadas.\n\nAhora ve a tu hoja de Google, haz clic en A1 y pega (Ctrl+V).'); };
+  var plan_b = function () {
+    var t = document.createElement('textarea');
+    t.value = texto; document.body.appendChild(t); t.select();
+    try { document.execCommand('copy'); ok(); } catch (e) { prompt('Copia este texto:', texto); }
+    t.remove();
+  };
+  if (navigator.clipboard) navigator.clipboard.writeText(texto).then(ok, plan_b); else plan_b();
+})();
+</script>
+<script>
+  var src = document.getElementById('codigo').textContent;
+  var a = document.getElementById('marcador');
+  a.href = 'javascript:' + encodeURIComponent(src);
+  a.addEventListener('click', function (e) { e.preventDefault(); alert('Arrástrame a la barra de marcadores; no hace falta pulsarme aquí.'); });
+</script>
+</body>
+</html>

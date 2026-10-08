@@ -1,0 +1,48 @@
+name: Actualizar web de fiestas
+
+on:
+  schedule:
+    - cron: '0 5 * * *'   # cada día a las 07:00 (verano) / 06:00 (invierno) hora de Madrid
+  push:
+    branches: [main]
+  workflow_dispatch:       # botón "Run workflow" para actualizar al momento
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Descargar fiestas desde Google Sheets
+        if: ${{ vars.SHEET_TSV_URL != '' }}
+        run: curl -fsSL "${{ vars.SHEET_TSV_URL }}" -o fiestas.tsv
+
+      - name: Generar la web
+        shell: pwsh
+        env:
+          SITE_URL: ${{ vars.SITE_URL }}
+          RRPP_URL: ${{ secrets.RRPP_URL }}
+        run: ./generar.ps1
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
