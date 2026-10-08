@@ -33,6 +33,27 @@
     if (v) v.hidden = total > 0;
   }
 
+  // Aviso de fiesta destacada: aparece a los 6 s y, si se cierra, no vuelve en 24 h
+  var promo = document.getElementById('promo');
+  if (promo) {
+    var clave = 'promo-' + promo.getAttribute('data-id');
+    var visto = 0;
+    try { visto = +localStorage.getItem(clave) || 0; } catch (e) {}
+    var recordar = function () { try { localStorage.setItem(clave, String(Date.now())); } catch (e) {} };
+    if (Date.now() - visto > 864e5) {
+      setTimeout(function () {
+        promo.hidden = false;
+        requestAnimationFrame(function () { promo.classList.add('on'); });
+      }, 6000);
+    }
+    promo.querySelector('.promo-x').addEventListener('click', function () {
+      promo.classList.remove('on');
+      setTimeout(function () { promo.hidden = true; }, 300);
+      recordar();
+    });
+    promo.querySelectorAll('a').forEach(function (a) { a.addEventListener('click', recordar); });
+  }
+
   if (q) q.addEventListener('input', aplicar);
   document.querySelectorAll('[data-f]').forEach(function (b) {
     b.addEventListener('click', function () {

@@ -179,6 +179,23 @@ $Dias = @($Eventos | Group-Object { $_.Fecha.ToString('yyyy-MM-dd') } | Sort-Obj
 $Discos = @($Eventos | Group-Object DiscoSlug | Sort-Object { -$_.Count }, Name)
 Write-Host ("{0} fiestas en {1} días y {2} discotecas" -f $Eventos.Count, $Dias.Count, $Discos.Count)
 
+# ------------------------------------------------------------------ Fiestas destacadas (destacados.psd1)
+$Destacados = @()
+$fDest = Join-Path $PSScriptRoot 'destacados.psd1'
+if (Test-Path $fDest) {
+  foreach ($d in (Import-PowerShellDataFile $fDest).Destacados) {
+    $fecha = Leer-Fecha $d.Fecha
+    if (-not $fecha -or $fecha -lt $Hoy) { continue }
+    $ini = Leer-Hora $d.Inicio
+    $inicio = $fecha.Add($ini)
+    if ($ini.Hours -lt 12) { $inicio = $inicio.AddDays(1) }
+    $d.FechaDT = $fecha
+    $d.InicioDT = $inicio
+    $d.Compra = "/entradas/$($d.Codigo.ToLowerInvariant())/"
+    $Destacados += [pscustomobject]$d
+  }
+}
+
 # ------------------------------------------------------------------ Plantillas
 $Menu = @(
   @('/fiestas-hoy-madrid/', 'Hoy'),
@@ -190,10 +207,11 @@ $Menu = @(
 function Pie {
   $sem = foreach ($i in 4, 5, 6, 0, 1, 2, 3) { '<a class="chip" href="{0}">Fiestas {1} Madrid</a>' -f (U "/fiestas-$($DiasSlug[$i])-madrid/"), $DiasSem[$i] }
   $top = foreach ($g in ($Discos | Select-Object -First 24)) { '<a class="chip" href="{0}">Entradas {1}</a>' -f (U "/discotecas/$($g.Name)/"), (Esc $g.Group[0].Disco) }
+  $dest = foreach ($d in $Destacados) { '<a class="chip" href="{0}">{1}</a>' -f (U $d.Ruta), (Esc $d.Enlace) }
   @"
 <footer><div class="wrap">
 <h2>Fiestas en Madrid por día</h2>
-<nav class="enlaces"><a class="chip" href="$(U '/fiestas-hoy-madrid/')">Fiestas hoy Madrid</a><a class="chip" href="$(U '/fiestas-fin-de-semana-madrid/')">Fin de semana</a><a class="chip" href="$(U '/tardeo-madrid/')">Tardeo Madrid</a>$($sem -join '')</nav>
+<nav class="enlaces"><a class="chip" href="$(U '/fiestas-hoy-madrid/')">Fiestas hoy Madrid</a><a class="chip" href="$(U '/fiestas-fin-de-semana-madrid/')">Fin de semana</a><a class="chip" href="$(U '/tardeo-madrid/')">Tardeo Madrid</a>$($dest -join '')$($sem -join '')</nav>
 <h2>Discotecas en Madrid</h2>
 <nav class="enlaces">$($top -join '')<a class="chip" href="$(U '/discotecas/')">Ver todas</a></nav>
 <p class="legal">$(Esc $Marca) es una agenda independiente de fiestas en Madrid. No es la web oficial de ninguna discoteca ni organizador. Las entradas se compran directamente en Fourvenues, la plataforma de venta de cada evento; precios, horarios y condiciones de acceso los fija cada sala. Actualizado el $(FechaLarga $Ahora) a las $($Ahora.ToString('HH:mm')).</p>
@@ -202,7 +220,9 @@ function Pie {
 }
 
 function Pagina {
-  param([string]$Titulo, [string]$Desc, [string]$Ruta, [string]$Cuerpo, $JsonLd = $null, [string]$Imagen = '', [string]$Activo = '', [string]$ClaseBody = '')
+  param([string]$Titulo, [string]$Desc, [string]$Ruta, [string]$Cuerpo, $JsonLd = $null, [string]$Imagen = '', [string]$Activo = '', [string]$ClaseBody = '', [switch]$SinPromo)
+  $promo = ''
+  if (-not $SinPromo) { $promo = Promo }
   $menu = foreach ($m in $Menu) {
     $cur = ''; if ($m[0] -eq $Activo) { $cur = ' aria-current="page"' }
     '<a href="{0}"{2}>{1}</a>' -f (U $m[0]), $m[1], $cur
@@ -243,9 +263,61 @@ $ld
 $Cuerpo
 </main>
 $(Pie)
+$promo
 <script src="$(U '/app.js')" defer></script>
 </body>
 </html>
+"@
+}
+
+# Aviso emergente pequeño (abajo a la derecha / abajo en el móvil) para la fiesta destacada
+function Promo {
+  $d = @($Destacados | Where-Object { $_.Popup } | Select-Object -First 1)
+  if (-not $d.Count) { return '' }
+  $d = $d[0]
+  @"
+<aside class="promo" id="promo" data-id="$(Esc $d.Codigo)" hidden aria-label="Fiesta destacada">
+<button class="promo-x" type="button" aria-label="Cerrar">✕</button>
+<a class="promo-in" href="$(U $d.Ruta)">
+<img src="$(Esc $d.Imagen)" alt="" width="64" height="80" loading="lazy">
+<span><small>$(Esc $d.Emoji) $(Esc $d.Etiqueta) · $(Esc (Cap (FechaLarga $d.FechaDT)))</small>
+<strong>$(Esc $d.Titulo)</strong>
+<em>$(Esc $d.Gancho)</em></span>
+</a>
+<a class="btn" href="$(U $d.Compra)" rel="nofollow sponsored">Entradas desde $($d.Desde) €</a>
+</aside>
+"@
+}
+
+# Tira fina bajo el título de los listados: destaca sin quitar sitio a las fiestas del día
+function Tira {
+  $html = foreach ($d in $Destacados) {
+    @"
+<a class="tira" href="$(U $d.Ruta)">
+<img src="$(Esc $d.Imagen)" alt="" width="40" height="50" loading="lazy">
+<span><strong>$(Esc $d.Emoji) $(Esc $d.Etiqueta): $(Esc $d.Titulo)</strong><small>$(Esc (Cap (FechaLarga $d.FechaDT))) · $(Esc $d.Gancho)</small></span>
+<span class="tira-cta">Ver</span>
+</a>
+"@
+  }
+  $html -join ''
+}
+
+# Página puente: el botón "Entradas" apunta a tu dominio y redirige a tu link RRPP
+function Puente([string]$ruta, [string]$destino) {
+  $dEsc = Esc $destino
+  $dJs = $destino.Replace('\', '\\').Replace("'", "\'")
+  Guardar $ruta @"
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer-when-downgrade">
+<meta http-equiv="refresh" content="0; url=$dEsc">
+<title>Abriendo la venta de entradas…</title>
+<script>location.replace('$dJs');</script>
+</head><body style="background:#0a0a10;color:#f4f3f8;font-family:system-ui,sans-serif;text-align:center;padding:40px 16px">
+<p>Abriendo la venta de entradas…</p><p><a style="color:#ff2e7e" href="$dEsc">Pulsa aquí si no se abre</a></p>
+</body></html>
 "@
 }
 
@@ -322,6 +394,8 @@ function Listado {
       $chips = '<div class="diasbar"><nav class="wrap dias" aria-label="Días">' + ($c -join '') + '</nav></div>'
     }
   }
+  $tira = ''
+  if ($Buscador) { $tira = Tira }
   $img = ''
   $conImg = @($Evs | Where-Object { $_.Img } | Select-Object -First 1)
   if ($conImg.Count) { $img = $conImg[0].Img }
@@ -330,6 +404,7 @@ function Listado {
 <h1>$H1</h1>
 <p>$(Esc $Intro)</p>
 $busca
+$tira
 </div>
 $chips
 <div class="wrap">
@@ -474,23 +549,64 @@ $extra
 </div>
 <div class="comprar-fija"><a class="btn xl" href="$(U $e.Compra)" rel="nofollow sponsored">Comprar entradas</a></div>
 "@
-  Guardar $e.Ruta (Pagina -Titulo "$($e.Titulo) en $($e.Disco) – $(Cap $fl) | Entradas" -Desc "Entradas para $($e.Titulo) en $($e.Disco), Madrid. $(Cap $fl), $($e.Horario). Compra tu entrada online." -Ruta $e.Ruta -Cuerpo $cuerpo -JsonLd $ld -Imagen $e.Img -ClaseBody 'con-barra') -Indexar
+  Guardar $e.Ruta (Pagina -Titulo "$($e.Titulo) en $($e.Disco) – $(Cap $fl) | Entradas" -Desc "Entradas para $($e.Titulo) en $($e.Disco), Madrid. $(Cap $fl), $($e.Horario). Compra tu entrada online." -Ruta $e.Ruta -Cuerpo $cuerpo -JsonLd $ld -Imagen $e.Img -ClaseBody 'con-barra' -SinPromo) -Indexar
+  Puente $e.Compra $destino
+}
 
-  # Página puente: el botón "Entradas" apunta a tu dominio y redirige a tu link RRPP
-  $dEsc = Esc $destino
-  $dJs = $destino.Replace('\', '\\').Replace("'", "\'")
-  Guardar $e.Compra @"
-<!doctype html>
-<html lang="es"><head><meta charset="utf-8">
-<meta name="robots" content="noindex, nofollow">
-<meta name="referrer" content="no-referrer-when-downgrade">
-<meta http-equiv="refresh" content="0; url=$dEsc">
-<title>Abriendo la venta de entradas…</title>
-<script>location.replace('$dJs');</script>
-</head><body style="background:#0a0a10;color:#f4f3f8;font-family:system-ui,sans-serif;text-align:center;padding:40px 16px">
-<p>Abriendo la venta de entradas…</p><p><a style="color:#ff2e7e" href="$dEsc">Pulsa aquí si no se abre</a></p>
-</body></html>
+# Páginas de fiestas destacadas
+foreach ($d in $Destacados) {
+  $fl = Cap (FechaLarga $d.FechaDT)
+  $ld = [ordered]@{
+    '@context'            = 'https://schema.org'
+    '@type'               = 'Event'
+    'name'                = "$($d.Titulo) – Fiesta de $($d.Etiqueta) en Madrid"
+    'startDate'           = (Iso $d.InicioDT)
+    'eventStatus'         = 'https://schema.org/EventScheduled'
+    'eventAttendanceMode' = 'https://schema.org/OfflineEventAttendanceMode'
+    'location'            = [ordered]@{
+      '@type'   = 'Place'
+      'name'    = $d.Lugar
+      'address' = [ordered]@{ '@type' = 'PostalAddress'; 'addressLocality' = 'Madrid'; 'addressRegion' = 'Comunidad de Madrid'; 'addressCountry' = 'ES' }
+    }
+    'image'               = @($d.Imagen)
+    'description'         = $d.DescSeo
+    'organizer'           = [ordered]@{ '@type' = 'Organization'; 'name' = $d.Titulo; 'url' = (Abs $d.Ruta) }
+    'offers'              = [ordered]@{ '@type' = 'Offer'; 'url' = (Abs $d.Compra); 'price' = $d.Desde; 'priceCurrency' = 'EUR'; 'availability' = 'https://schema.org/InStock' }
+  }
+  $chipsEt = ($d.Etiquetas | ForEach-Object { '<span>' + (Esc $_) + '</span>' }) -join ''
+  $incluye = ($d.Incluye | ForEach-Object { '<li>' + (Esc $_) + '</li>' }) -join ''
+  $precios = ($d.Precios | ForEach-Object { '<li>' + (Esc $_) + '</li>' }) -join ''
+  $proximas = @($Eventos | Select-Object -First 4)
+  $extra = ''
+  if ($proximas.Count) { $extra = '<section class="seccion"><h2>Y mientras tanto, fiestas esta semana</h2>' + (Rejilla $proximas) + '<p><a class="chip" href="' + (U '/') + '">Ver todas las fiestas de Madrid</a></p></section>' }
+  $cuerpo = @"
+<div class="wrap">
+<nav class="migas" aria-label="Ruta"><a href="$(U '/')">Fiestas Madrid</a> › $(Esc $d.Enlace)</nav>
+<article class="evento">
+<span class="poster"><img src="$(Esc $d.Imagen)" alt="Cartel de $(Esc $d.Titulo)" width="534" height="672"></span>
+<div>
+<p class="etiquetas">$chipsEt</p>
+<h1>$($d.H1)</h1>
+<p class="sub">$(Esc $d.Emoji) $(Esc $d.Titulo)</p>
+<dl class="datos">
+<dt>Fecha</dt><dd>$(Esc $fl)</dd>
+<dt>Horario</dt><dd>Desde las $(Esc $d.Inicio) hasta el cierre</dd>
+<dt>Lugar</dt><dd>$(Esc $d.Lugar), Madrid</dd>
+<dt>Precio</dt><dd>Desde $($d.Desde) €</dd>
+</dl>
+<a class="btn xl" href="$(U $d.Compra)" rel="nofollow sponsored">Comprar entradas</a>
+<p class="nota">Las entradas van por tramos y suben de precio. Compra segura en Fourvenues.</p>
+</div>
+</article>
+<section class="seccion"><h2>Qué incluye</h2><ul class="incluye">$incluye</ul></section>
+<section class="seccion"><h2>Entradas</h2><ul class="incluye">$precios</ul></section>
+<section class="seccion"><h2>Sobre la fiesta</h2><p class="texto">$(Esc $d.Texto)</p></section>
+$extra
+</div>
+<div class="comprar-fija"><a class="btn xl" href="$(U $d.Compra)" rel="nofollow sponsored">Entradas desde $($d.Desde) €</a></div>
 "@
+  Guardar $d.Ruta (Pagina -Titulo $d.TituloSeo -Desc $d.DescSeo -Ruta $d.Ruta -Cuerpo $cuerpo -JsonLd $ld -Imagen $d.Imagen -ClaseBody 'con-barra' -SinPromo) -Indexar
+  Puente $d.Compra "$RrppUrl/events/$($d.Evento)"
 }
 
 # 404

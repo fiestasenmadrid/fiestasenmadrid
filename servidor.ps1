@@ -3,6 +3,7 @@ param([int]$Puerto = 8080, [string]$Raiz = (Join-Path $PSScriptRoot 'public'))
 $tipos = @{ '.html' = 'text/html; charset=utf-8'; '.css' = 'text/css'; '.js' = 'text/javascript'; '.xml' = 'application/xml'; '.txt' = 'text/plain; charset=utf-8' }
 $http = New-Object Net.HttpListener
 $http.Prefixes.Add("http://localhost:$Puerto/")
+$http.Prefixes.Add("http://127.0.0.1:$Puerto/")
 $http.Start()
 Write-Host "Sirviendo $Raiz en http://localhost:$Puerto/"
 while ($http.IsListening) {
@@ -17,6 +18,7 @@ while ($http.IsListening) {
   if (-not $tipo) { $tipo = 'application/octet-stream' }
   $ctx.Response.StatusCode = $codigo
   $ctx.Response.ContentType = $tipo
+  $ctx.Response.ContentLength64 = $bytes.Length
   $ctx.Response.OutputStream.Write($bytes, 0, $bytes.Length)
   $ctx.Response.Close()
 }
