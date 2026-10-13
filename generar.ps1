@@ -144,7 +144,7 @@ foreach ($l in ($lineas | Select-Object -Skip 1)) {
 
   # Las fiestas que empiezan de madrugada (00:00) pertenecen a la noche de "fecha"
   $inicio = $fecha.Add($ini)
-  if ($ini.Hours -lt 12) { $inicio = $inicio.AddDays(1) }
+  if ($ini.Hours -lt 8) { $inicio = $inicio.AddDays(1) }
   $finH = Leer-Hora (Campo $p 'fin')
   $fin = $null
   if ($null -ne $finH) { $fin = $fecha.Add($finH); while ($fin -le $inicio) { $fin = $fin.AddDays(1) } }
@@ -188,7 +188,7 @@ if (Test-Path $fDest) {
     if (-not $fecha -or $fecha -lt $Hoy) { continue }
     $ini = Leer-Hora $d.Inicio
     $inicio = $fecha.Add($ini)
-    if ($ini.Hours -lt 12) { $inicio = $inicio.AddDays(1) }
+    if ($ini.Hours -lt 8) { $inicio = $inicio.AddDays(1) }
     $d.FechaDT = $fecha
     $d.InicioDT = $inicio
     $d.Compra = "/entradas/$($d.Codigo.ToLowerInvariant())/"
