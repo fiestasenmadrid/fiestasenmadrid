@@ -19,7 +19,7 @@ $ErrorActionPreference = 'Stop'
 $Marca   = 'Fiestas en Madrid'
 $SiteUrl = 'https://fiestasenmadrid.com'
 # Fiestas que salen en tu perfil pero no son en Madrid (se comparan en mayúsculas)
-$Excluir = @('MALLORCA', 'DENIA', 'VALLADOLID')
+$Excluir = @('MALLORCA', 'DENIA', 'VALLADOLID', 'CARTAGENA', 'TRIPS SUMMER CLUB')
 $ImgBase = 'https://fourvenues.com/cdn-cgi/imagedelivery/kWuoTchaMsk7Xnc_FNem7A/'
 
 if ($env:SITE_URL) { $SiteUrl = $env:SITE_URL }
