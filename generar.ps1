@@ -196,6 +196,20 @@ if (Test-Path $fDest) {
   }
 }
 
+# ------------------------------------------------------------------ Páginas de temporada (destacados.psd1 › Especiales)
+$Especiales = @()
+if (Test-Path $fDest) {
+  foreach ($s in @((Import-PowerShellDataFile $fDest).Especiales)) {
+    if (-not $s) { continue }
+    $desde = Leer-Fecha $s.Desde
+    $hasta = Leer-Fecha $s.Hasta
+    if (-not $desde -or -not $hasta -or $hasta -lt $Hoy) { continue }
+    $s.Evs = @($Eventos | Where-Object { $_.Fecha -ge $desde -and $_.Fecha -le $hasta })
+    if (-not $s.Evs.Count) { continue }
+    $Especiales += [pscustomobject]$s
+  }
+}
+
 # ------------------------------------------------------------------ Plantillas
 $Menu = @(
   @('/fiestas-hoy-madrid/', 'Hoy'),
@@ -207,7 +221,8 @@ $Menu = @(
 function Pie {
   $sem = foreach ($i in 4, 5, 6, 0, 1, 2, 3) { '<a class="chip" href="{0}">Fiestas {1} Madrid</a>' -f (U "/fiestas-$($DiasSlug[$i])-madrid/"), $DiasSem[$i] }
   $top = foreach ($g in ($Discos | Select-Object -First 24)) { '<a class="chip" href="{0}">Entradas {1}</a>' -f (U "/discotecas/$($g.Name)/"), (Esc $g.Group[0].Disco) }
-  $dest = foreach ($d in $Destacados) { '<a class="chip" href="{0}">{1}</a>' -f (U $d.Ruta), (Esc $d.Enlace) }
+  $dest = @(foreach ($s in $Especiales) { '<a class="chip" href="{0}">{1}</a>' -f (U $s.Ruta), (Esc $s.Enlace) }) +
+          @(foreach ($d in $Destacados) { '<a class="chip" href="{0}">{1}</a>' -f (U $d.Ruta), (Esc $d.Enlace) })
   @"
 <footer><div class="wrap">
 <h2>Fiestas en Madrid por día</h2>
@@ -291,6 +306,19 @@ function Promo {
 
 # Tira fina bajo el título de los listados: destaca sin quitar sitio a las fiestas del día
 function Tira {
+  # Si hay una página de temporada activa (p. ej. Halloween), la tira lleva a ella
+  if ($Especiales.Count) {
+    $html = foreach ($s in $Especiales) {
+      @"
+<a class="tira" href="$(U $s.Ruta)">
+<img src="$(Esc $s.Imagen)" alt="" width="40" height="50" loading="lazy">
+<span><strong>$(Esc $s.Emoji) $(Esc $s.TextoTira)</strong><small>$($s.Evs.Count) fiestas · $(Esc $s.Fechas)</small></span>
+<span class="tira-cta">Ver</span>
+</a>
+"@
+    }
+    return ($html -join '')
+  }
   $html = foreach ($d in $Destacados) {
     @"
 <a class="tira" href="$(U $d.Ruta)">
@@ -366,7 +394,7 @@ function ListaLd($evs) {
 }
 
 function Listado {
-  param([string]$Ruta, [string]$Titulo, [string]$H1, [string]$Intro, [string]$Desc, $Evs, [string]$Activo = '', [switch]$Buscador)
+  param([string]$Ruta, [string]$Titulo, [string]$H1, [string]$Intro, [string]$Desc, $Evs, [string]$Activo = '', [switch]$Buscador, [switch]$SinTira, [string]$Extra = '', [string]$Despues = '')
   $Evs = @($Evs)
   $cuerpo = ''
   if ($Evs.Count -eq 0) {
@@ -395,7 +423,7 @@ function Listado {
     }
   }
   $tira = ''
-  if ($Buscador) { $tira = Tira }
+  if ($Buscador -and -not $SinTira) { $tira = Tira }
   $img = ''
   $conImg = @($Evs | Where-Object { $_.Img } | Select-Object -First 1)
   if ($conImg.Count) { $img = $conImg[0].Img }
@@ -405,16 +433,18 @@ function Listado {
 <p>$(Esc $Intro)</p>
 $busca
 $tira
+$Extra
 </div>
 $chips
 <div class="wrap">
 $cuerpo
 <p class="vacio" id="vacio" hidden>No hay fiestas que coincidan con tu búsqueda.</p>
+$Despues
 </div>
 "@
   $ld = $null
   if ($Evs.Count) { $ld = ListaLd $Evs }
-  Guardar $Ruta (Pagina -Titulo $Titulo -Desc $Desc -Ruta $Ruta -Cuerpo $cuerpoFinal -JsonLd $ld -Imagen $img -Activo $Activo) -Indexar
+  Guardar $Ruta (Pagina -Titulo $Titulo -Desc $Desc -Ruta $Ruta -Cuerpo $cuerpoFinal -JsonLd $ld -Imagen $img -Activo $Activo -SinPromo:$SinTira) -Indexar
 }
 
 # ------------------------------------------------------------------ Generación
@@ -462,6 +492,26 @@ Listado -Ruta '/fiestas-fin-de-semana-madrid/' -Activo '/fiestas-fin-de-semana-m
   -H1 'Fiestas este <em>fin de semana</em> en Madrid' `
   -Intro "Viernes, sábado y domingo: $($finde.Count) fiestas en Madrid este finde. Elige plan y compra tu entrada online." `
   -Desc "Planes de fiesta para el fin de semana en Madrid: $($finde.Count) fiestas del viernes $($vie.Day) al domingo $($dom.Day). Discotecas, tardeos y entradas."
+
+# Páginas de temporada (Halloween, Nochevieja…)
+foreach ($s in $Especiales) {
+  $extra = ''
+  $d = @($Destacados | Where-Object { $_.Codigo -eq $s.Destacado } | Select-Object -First 1)
+  if ($d.Count) {
+    $d = $d[0]
+    $extra = @"
+<a class="tira tira-grande" href="$(U $d.Ruta)">
+<img src="$(Esc $d.Imagen)" alt="" width="72" height="90" loading="lazy">
+<span><small class="tira-etq">⭐ Recomendada</small><strong>$(Esc $d.Titulo)</strong><small>$(Esc (Cap (FechaLarga $d.FechaDT))) · $(Esc $d.Gancho) · desde $($d.Desde) €</small></span>
+<span class="tira-cta">Ver</span>
+</a>
+"@
+  }
+  $texto = '<section class="seccion"><h2>' + (Esc $s.TituloTexto) + '</h2><p class="texto">' + (Esc $s.Texto) + '</p></section>'
+  $n = $s.Evs.Count
+  Listado -Ruta $s.Ruta -Buscador -SinTira -Evs $s.Evs -Extra $extra -Despues $texto `
+    -Titulo ($s.TituloSeo -f $n) -H1 $s.H1 -Intro ($s.Intro -f $n) -Desc ($s.DescSeo -f $n)
+}
 
 # Tardeo
 $tardeo = @($Eventos | Where-Object { $_.Tipo -eq 'tardeo' })

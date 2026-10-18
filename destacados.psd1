@@ -37,4 +37,26 @@
       Popup     = $true
     }
   )
+
+  # Páginas de temporada: reúnen todas las fiestas entre dos fechas. Desaparecen solas al pasar "Hasta".
+  # En TituloSeo, Intro y DescSeo, {0} se sustituye por el número de fiestas.
+  Especiales = @(
+    @{
+      Ruta        = '/fiestas-halloween-madrid/'
+      Enlace      = 'Fiestas Halloween Madrid 2026'
+      Emoji       = '🎃'
+      TextoTira   = 'Halloween en Madrid: todas las fiestas'
+      Fechas      = 'del 29 de octubre al 1 de noviembre'
+      Desde       = '2026-10-29'
+      Hasta       = '2026-11-01'
+      Imagen      = 'https://fourvenues.com/cdn-cgi/imagedelivery/kWuoTchaMsk7Xnc_FNem7A/79ba0786-58a4-4f2a-d91f-b8aef7f38c00/w=1350'
+      Destacado   = 'FNF2'
+      H1          = 'Fiestas de <em>Halloween</em> en Madrid 2026'
+      TituloSeo   = 'Fiestas Halloween Madrid 2026: {0} fiestas del 29 oct al 1 nov | Fiestas en Madrid'
+      Intro       = '{0} fiestas para el puente de Halloween en Madrid, del jueves 29 de octubre al domingo 1 de noviembre: fincas con barra libre, discotecas, tardeos y fiestas de disfraces con entrada online.'
+      DescSeo     = 'Todas las fiestas de Halloween 2026 en Madrid: {0} planes del 29 de octubre al 1 de noviembre. Fiestas en finca con barra libre, discotecas y fiestas de disfraces. Compra tus entradas online.'
+      TituloTexto = '¿Qué hacer en Halloween 2026 en Madrid?'
+      Texto       = 'Halloween 2026 cae en sábado, así que en Madrid se celebra todo el puente: desde el jueves 29 de octubre hasta el domingo 1 de noviembre. La noche fuerte es el sábado 31, con fiestas de disfraces en las principales discotecas de la ciudad y grandes fiestas en fincas a las afueras con barra libre y autobuses desde Madrid. Si buscas un plan de tarde, también hay tardeos temáticos desde las 17:00. Las entradas de Halloween suelen subir de precio por tramos y muchas se agotan los últimos días, así que conviene comprarlas con antelación. Usa el buscador para encontrar tu discoteca o escribe «halloween» para ver solo las fiestas temáticas.'
+    }
+  )
 }
