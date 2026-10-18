@@ -9,11 +9,9 @@ on:
 
 permissions:
   contents: write
-  pages: write
-  id-token: write
 
 concurrency:
-  group: pages
+  group: web
   cancel-in-progress: true
 
 jobs:
@@ -33,7 +31,7 @@ jobs:
           RRPP_URL: ${{ secrets.RRPP_URL }}
         run: ./generar.ps1
 
-      # Netlify publica lo que haya en la rama "web" (la web ya generada, sin código)
+      # Netlify publica automáticamente lo que haya en la rama "web" (la web ya generada)
       - name: Publicar en la rama web (Netlify)
         working-directory: public
         run: |
@@ -43,17 +41,3 @@ jobs:
           git add -A
           git commit -q -m "Web generada el $(date -u +%F)"
           git push -q -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" web
-
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: public
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
