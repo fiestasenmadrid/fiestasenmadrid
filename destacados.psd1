@@ -58,5 +58,22 @@
       TituloTexto = '¿Qué hacer en Halloween 2026 en Madrid?'
       Texto       = 'Halloween 2026 cae en sábado, así que en Madrid se celebra todo el puente: desde el jueves 29 de octubre hasta el domingo 1 de noviembre. La noche fuerte es el sábado 31, con fiestas de disfraces en las principales discotecas de la ciudad y grandes fiestas en fincas a las afueras con barra libre y autobuses desde Madrid. Si buscas un plan de tarde, también hay tardeos temáticos desde las 17:00. Las entradas de Halloween suelen subir de precio por tramos y muchas se agotan los últimos días, así que conviene comprarlas con antelación. Usa el buscador para encontrar tu discoteca o escribe «halloween» para ver solo las fiestas temáticas.'
     }
+    @{
+      Ruta        = '/fiestas-nochevieja-madrid/'
+      Enlace      = 'Fiestas Nochevieja Madrid 2026'
+      Emoji       = '🥂'
+      TextoTira   = 'Nochevieja en Madrid: todas las fiestas'
+      Fechas      = '31 de diciembre y 1 de enero'
+      Desde       = '2026-12-31'
+      Hasta       = '2027-01-01'
+      Imagen      = 'https://fourvenues.com/cdn-cgi/imagedelivery/kWuoTchaMsk7Xnc_FNem7A/988999fa-b7b7-437b-78d8-3a6e830d0700/width=534'
+      Destacado   = ''
+      H1          = 'Fiestas de <em>Nochevieja</em> en Madrid 2026'
+      TituloSeo   = 'Fiestas Nochevieja Madrid 2026-2027: {0} fiestas y entradas | Fiestas en Madrid'
+      Intro       = '{0} fiestas para despedir 2026 en Madrid: Nochevieja en las mejores discotecas después de las campanadas y planes para el día de Año Nuevo, con entrada online.'
+      DescSeo     = 'Todas las fiestas de Nochevieja 2026 en Madrid: {0} planes para el 31 de diciembre y Año Nuevo en Fitz, Vandido, Joy Eslava, Teatro Magno, Florida Park y más. Compra tus entradas online.'
+      TituloTexto = '¿Dónde celebrar la Nochevieja 2026 en Madrid?'
+      Texto       = 'La Nochevieja de 2026 cae en jueves y en Madrid la fiesta empieza justo después de las campanadas: la mayoría de discotecas abren entre las 00:30 y la 1:00 y cierran a las 6:00 o incluso a las 8:00 de la mañana. Hay planes para todos los gustos: grandes salas como Teatro Magno o Florida Park, discotecas como Fitz, Vandido, Joy Eslava o Tiffany''s, y fiestas latinas y de reguetón. Es la noche con las entradas más caras y que antes se agotan del año, y muchas suben de precio por tramos, así que conviene reservar con antelación. Si prefieres seguir de fiesta, el 1 de enero también hay planes desde la tarde.'
+    }
   )
 }
