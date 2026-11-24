@@ -59,6 +59,24 @@
       Texto       = 'Halloween 2026 cae en sábado, así que en Madrid se celebra todo el puente: desde el jueves 29 de octubre hasta el domingo 1 de noviembre. La noche fuerte es el sábado 31, con fiestas de disfraces en las principales discotecas de la ciudad y grandes fiestas en fincas a las afueras con barra libre y autobuses desde Madrid. Si buscas un plan de tarde, también hay tardeos temáticos desde las 17:00. Las entradas de Halloween suelen subir de precio por tramos y muchas se agotan los últimos días, así que conviene comprarlas con antelación. Usa el buscador para encontrar tu discoteca o escribe «halloween» para ver solo las fiestas temáticas.'
     }
     @{
+      Ruta        = '/fiestas-fin-de-examenes-madrid/'
+      Enlace      = 'Fiestas fin de exámenes Madrid'
+      Emoji       = '🎓'
+      TextoTira   = 'Fin de exámenes: todas las fiestas'
+      Fechas      = 'del 17 al 22 de diciembre'
+      Desde       = '2026-12-17'
+      Hasta       = '2026-12-22'
+      Filtro      = '(?i)ex[aá]men|universitari'
+      Imagen      = 'https://fourvenues.com/cdn-cgi/imagedelivery/kWuoTchaMsk7Xnc_FNem7A/a79e885e-6b32-4ba6-5563-ef1c011e2000/width=534'
+      Destacado   = ''
+      H1          = 'Fiestas de <em>fin de exámenes</em> en Madrid'
+      TituloSeo   = 'Fiestas fin de exámenes Madrid diciembre 2026: {0} fiestas universitarias | Fiestas en Madrid'
+      Intro       = '{0} fiestas para celebrar el fin de exámenes del primer cuatrimestre en Madrid, del 17 al 22 de diciembre: Chango, Fitz, Vandido, Chamán, La Riviera y más, con entrada online.'
+      DescSeo     = 'Todas las fiestas de fin de exámenes en Madrid (diciembre 2026): {0} fiestas universitarias en Chango, Fitz, Vandido, Chamán, Posh, La Riviera y más. Compra tus entradas online.'
+      TituloTexto = '¿Dónde celebrar el fin de exámenes en Madrid?'
+      Texto       = 'Cuando terminan los exámenes del primer cuatrimestre, las discotecas de Madrid preparan fiestas especiales para universitarios entre el 17 y el 22 de diciembre. Hay fiestas de fin de exámenes en Chango, Fitz, Vandido, Chamán, Posh, Mon, Club Graf y La Riviera, además de fiestas organizadas para universidades concretas. Muchas tienen promociones como copas a precio reducido y las entradas anticipadas suelen ser más baratas que en taquilla, así que conviene comprarlas antes. Usa el buscador para encontrar tu discoteca.'
+    }
+    @{
       Ruta        = '/fiestas-nochevieja-madrid/'
       Enlace      = 'Fiestas Nochevieja Madrid 2026'
       Emoji       = '🥂'

@@ -205,6 +205,8 @@ if (Test-Path $fDest) {
     $hasta = Leer-Fecha $s.Hasta
     if (-not $desde -or -not $hasta -or $hasta -lt $Hoy) { continue }
     $s.Evs = @($Eventos | Where-Object { $_.Fecha -ge $desde -and $_.Fecha -le $hasta })
+    # Filtro opcional por título (p. ej. solo las fiestas de "fin de exámenes")
+    if ($s.Filtro) { $s.Evs = @($s.Evs | Where-Object { $_.Titulo -match $s.Filtro }) }
     if (-not $s.Evs.Count) { continue }
     $Especiales += [pscustomobject]$s
   }
